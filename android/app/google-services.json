@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "843040157256",
+    "project_id": "engezha-app",
+    "storage_bucket": "engezha-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:843040157256:android:92976d986a71beade6727d",
+        "android_client_info": {
+          "package_name": "com.example.engezzzha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAasX4iZWkX-B2W8LGIXxVJS711MXg4y2E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

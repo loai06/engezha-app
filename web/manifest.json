@@ -1,0 +1,9 @@
+{
+  "name": "Super Planner",
+  "short_name": "Planner",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F5F5F5",
+  "theme_color": "#111827",
+  "description": "A clean daily planner and habit tracker UI"
+}
