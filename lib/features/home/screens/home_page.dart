@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../app/routes.dart';
+import '../../../core/services/firestore_service.dart';
+import '../../planner/models/planner_entry.dart';
+import '../../planner/screens/planner_form.dart';
 import '../widgets/add_entry_sheet.dart';
 import '../widgets/task_tile.dart';
 
@@ -12,68 +14,83 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedDay = 1;
-  final Set<int> _completed = {4};
+  late DateTime _selectedDate;
+  late DateTime _weekStart;
 
-  static const _items = [
-    ('📚', 'Read a book', '09:00 AM – 10:00 AM'),
-    ('📖', 'Journaling', '10:30 AM'),
-    ('🎶', 'Listen calming music', '11:00 AM'),
-    ('🏃', 'Running', 'Anytime'),
-    ('🌅', 'Wake up', '07:00 AM'),
-    ('🧘', 'Stretching', '07:30 AM'),
-  ];
-
-  static const _days = [
-    ('Sun', '8'),
-    ('Mon', '9'),
-    ('Tue', '10'),
-    ('Wed', '11'),
-    ('Thu', '12'),
-    ('Fri', '13'),
-    ('Sat', '14'),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = _dateOnly(DateTime.now());
+    _weekStart = _startOfWeek(_selectedDate);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Today',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        title: Text(
+          _isToday(_selectedDate) ? 'Today' : _formatDate(_selectedDate),
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_none_rounded),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Column(
           children: [
             _buildCalendar(),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                itemCount: _items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (_, index) {
-                  final item = _items[index];
-                  return TaskTile(
-                    emoji: item.$1,
-                    title: item.$2,
-                    subtitle: item.$3,
-                    done: _completed.contains(index),
-                    onTap: () => setState(() {
-                      _completed.contains(index)
-                          ? _completed.remove(index)
-                          : _completed.add(index);
-                    }),
-                    onEdit: () => Navigator.pushNamed(
-                      context,
-                      index == 3 ? AppRoutes.editHabit : AppRoutes.editTask,
-                    ),
+              child: StreamBuilder<List<PlannerEntry>>(
+                stream: FirestoreService.instance.watchAllEntries(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return _MessageState(
+                      icon: Icons.cloud_off_rounded,
+                      title: 'Could not load your planner',
+                      body: '${snapshot.error}',
+                    );
+                  }
+
+                  final entries = (snapshot.data ?? const <PlannerEntry>[])
+                      .where((entry) => entry.appliesTo(_selectedDate))
+                      .toList()
+                    ..sort((a, b) => (a.startMinutes ?? 9999)
+                        .compareTo(b.startMinutes ?? 9999));
+
+                  if (entries.isEmpty) {
+                    return const _MessageState(
+                      icon: Icons.event_note_rounded,
+                      title: 'Nothing planned yet',
+                      body: 'Tap + to add your first task or habit.',
+                    );
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                    itemCount: entries.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (_, index) {
+                      final entry = entries[index];
+                      return TaskTile(
+                        emoji: entry.emoji,
+                        title: entry.title,
+                        subtitle: entry.subtitleFor(_selectedDate),
+                        done: entry.isCompletedFor(_selectedDate),
+                        onToggle: () => FirestoreService.instance
+                            .toggleCompletion(entry, _selectedDate),
+                        onEdit: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PlannerForm(
+                              kind: entry.kind,
+                              entry: entry,
+                            ),
+                          ),
+                        ),
+                        onDelete: () => _confirmDelete(entry),
+                      );
+                    },
                   );
                 },
               ),
@@ -91,50 +108,141 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCalendar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(_days.length, (index) {
-          final selected = _selectedDay == index;
-          final day = _days[index];
+  Future<void> _confirmDelete(PlannerEntry entry) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete entry?'),
+        content: Text('Delete “${entry.title}”? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
 
-          return InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () => setState(() => _selectedDay = index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: 42,
-              padding: const EdgeInsets.symmetric(vertical: 9),
-              decoration: BoxDecoration(
-                color: selected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    day.$1,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: selected ? Colors.white70 : null,
+    if (confirmed == true && entry.id != null) {
+      await FirestoreService.instance.deleteEntry(entry.id!);
+    }
+  }
+
+  Widget _buildCalendar() {
+    final dates = List.generate(7, (index) => _weekStart.add(Duration(days: index)));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: 'Previous week',
+            onPressed: () => setState(() {
+              _weekStart = _weekStart.subtract(const Duration(days: 7));
+              _selectedDate = _weekStart;
+            }),
+            icon: const Icon(Icons.chevron_left_rounded),
+          ),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: dates.map((date) {
+                final selected = _sameDate(_selectedDate, date);
+                return InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => setState(() => _selectedDate = date),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 42,
+                    padding: const EdgeInsets.symmetric(vertical: 9),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          _weekday(date.weekday),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: selected ? Colors.white70 : null,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          '${date.day}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: selected ? Colors.white : null,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    day.$2,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: selected ? Colors.white : null,
-                    ),
-                  ),
-                ],
-              ),
+                );
+              }).toList(),
             ),
-          );
-        }),
+          ),
+          IconButton(
+            tooltip: 'Next week',
+            onPressed: () => setState(() {
+              _weekStart = _weekStart.add(const Duration(days: 7));
+              _selectedDate = _weekStart;
+            }),
+            icon: const Icon(Icons.chevron_right_rounded),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
+
+  static DateTime _startOfWeek(DateTime date) =>
+      _dateOnly(date).subtract(Duration(days: date.weekday % 7));
+
+  static bool _sameDate(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  static bool _isToday(DateTime date) => _sameDate(date, DateTime.now());
+
+  static String _weekday(int weekday) =>
+      const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][weekday - 1];
+
+  static String _formatDate(DateTime date) => '${date.day}/${date.month}/${date.year}';
+}
+
+class _MessageState extends StatelessWidget {
+  const _MessageState({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 54, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(height: 14),
+            Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            Text(body, textAlign: TextAlign.center),
+          ],
+        ),
       ),
     );
   }
