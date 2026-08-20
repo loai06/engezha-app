@@ -48,7 +48,40 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) setState(() => _loading = false);
     }
   }
+Future<void> _resetPassword() async {
+  final email = _emailController.text.trim();
 
+  if (email.isEmpty || !email.contains('@')) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please enter a valid email first.'),
+      ),
+    );
+    return;
+  }
+
+  try {
+    await AuthService.instance.sendPasswordReset(
+      email: email,
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Password reset email sent.'),
+      ),
+    );
+  } catch (error) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AuthService.instance.messageFor(error)),
+      ),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
     return AuthFrame(
@@ -120,6 +153,17 @@ class _LoginPageState extends State<LoginPage> {
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _loading ? null : _resetPassword,
+                  child: const Text(
+                    'Forgot Password?',
+                    style: TextStyle(color: Colors.black),
                   ),
                 ),
               ),
