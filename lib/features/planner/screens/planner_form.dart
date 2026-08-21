@@ -252,7 +252,7 @@ class _PlannerFormState extends State<PlannerForm> {
       '📚',
       '📝',
       '💻',
-      '🧘',
+      '💪',
       '🏃',
       '🏋️',
       '💧',
