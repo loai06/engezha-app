@@ -250,17 +250,17 @@ class _PlannerFormState extends State<PlannerForm> {
   Future<void> _pickEmoji() async {
     const options = [
       '📚',
-      '✅',
-      '💼',
-      '🎓',
-      '🏃',
-      '🔥',
-      '💧',
-      '🧘',
-      '💪',
-      '🎯',
       '📝',
-      '🌅'
+      '💻',
+      '🧘',
+      '🏃',
+      '🏋️',
+      '💧',
+      '🥗',
+      '🕌',
+      '🎯',
+      '💊',
+      '✅'
     ];
     final result = await showModalBottomSheet<String>(
       context: context,
