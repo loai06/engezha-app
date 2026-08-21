@@ -8,20 +8,32 @@ class AuthFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
+  resizeToAvoidBottomInset: true,
+  body: SafeArea(
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 20,
+          ),
+          keyboardDismissBehavior:
+              ScrollViewKeyboardDismissBehavior.onDrag,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
+            ),
+            child: IntrinsicHeight(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: children,
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
+    ),
+  ),
     );
   }
 }

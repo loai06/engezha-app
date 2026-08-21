@@ -85,13 +85,17 @@ class _PlannerFormState extends State<PlannerForm> {
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.surface,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Theme.of(context).dividerColor),
+                              border: Border.all(
+                                  color: Theme.of(context).dividerColor),
                             ),
-                            child: Text(_emoji, style: const TextStyle(fontSize: 38)),
+                            child: Text(_emoji,
+                                style: const TextStyle(fontSize: 38)),
                           ),
                         ),
                         const SizedBox(height: 8),
-                        TextButton(onPressed: _pickEmoji, child: const Text('Change Emoji')),
+                        TextButton(
+                            onPressed: _pickEmoji,
+                            child: const Text('Change Emoji')),
                       ],
                     ),
                   ),
@@ -105,7 +109,8 @@ class _PlannerFormState extends State<PlannerForm> {
                         ? '$noun name is required'
                         : null,
                     decoration: InputDecoration(
-                      hintText: _isHabit ? 'e.g. Drink Water' : 'e.g. Read a book',
+                      hintText:
+                          _isHabit ? 'e.g. Drink Water' : 'e.g. Read a book',
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -115,7 +120,8 @@ class _PlannerFormState extends State<PlannerForm> {
                     controller: _notesController,
                     minLines: 1,
                     maxLines: 4,
-                    decoration: const InputDecoration(hintText: 'Add notes (optional)'),
+                    decoration:
+                        const InputDecoration(hintText: 'Add notes (optional)'),
                   ),
                   const SizedBox(height: 20),
                   const FieldLabel('Date'),
@@ -152,7 +158,8 @@ class _PlannerFormState extends State<PlannerForm> {
                     const InfoCard(
                       icon: Icons.restart_alt_rounded,
                       title: 'Habit repeats daily',
-                      body: 'The habit appears every day starting from the selected date.',
+                      body:
+                          'The habit appears every day starting from the selected date.',
                     ),
                   const SizedBox(height: 28),
                   PrimaryButton(
@@ -191,8 +198,10 @@ class _PlannerFormState extends State<PlannerForm> {
       kind: widget.kind,
       emoji: _emoji,
       date: DateTime(_date.year, _date.month, _date.day),
-      startMinutes: _isHabit || _startTime == null ? null : _timeToMinutes(_startTime!),
-      endMinutes: _isHabit || _endTime == null ? null : _timeToMinutes(_endTime!),
+      startMinutes:
+          _isHabit || _startTime == null ? null : _timeToMinutes(_startTime!),
+      endMinutes:
+          _isHabit || _endTime == null ? null : _timeToMinutes(_endTime!),
       completedDates: old?.completedDates ?? const [],
     );
 
@@ -239,7 +248,20 @@ class _PlannerFormState extends State<PlannerForm> {
   }
 
   Future<void> _pickEmoji() async {
-    const options = ['📚', '✅', '💼', '🎓', '🏃', '🔥', '💧', '🧘', '💪', '🎯', '📝', '🌅'];
+    const options = [
+      '📚',
+      '✅',
+      '💼',
+      '🎓',
+      '🏃',
+      '🔥',
+      '💧',
+      '🧘',
+      '💪',
+      '🎯',
+      '📝',
+      '🌅'
+    ];
     final result = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -274,11 +296,11 @@ class _PlannerFormState extends State<PlannerForm> {
 
   static int _timeToMinutes(TimeOfDay time) => time.hour * 60 + time.minute;
 
-  static TimeOfDay? _minutesToTime(int? value) => value == null
-      ? null
-      : TimeOfDay(hour: value ~/ 60, minute: value % 60);
+  static TimeOfDay? _minutesToTime(int? value) =>
+      value == null ? null : TimeOfDay(hour: value ~/ 60, minute: value % 60);
 
-  static String _formatDate(DateTime date) => '${date.day}/${date.month}/${date.year}';
+  static String _formatDate(DateTime date) =>
+      '${date.day}/${date.month}/${date.year}';
 }
 
 class _PickerBox extends StatelessWidget {

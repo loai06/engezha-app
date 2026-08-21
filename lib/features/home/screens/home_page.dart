@@ -100,7 +100,7 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         shape: const CircleBorder(),
         onPressed: () => showAddEntrySheet(context),
         child: const Icon(Icons.add_rounded),
@@ -133,75 +133,114 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCalendar() {
-    final dates = List.generate(7, (index) => _weekStart.add(Duration(days: index)));
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = Theme.of(context).colorScheme;
+
+    final selectedBackground =
+    isDark ? const Color(0xFF343434) : Colors.black;
+
+    const selectedTextColor = Colors.white;
+
+    final dates =
+    List.generate(7, (index) => _weekStart.add(Duration(days: index)));
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
       child: Row(
         children: [
-          IconButton(
-            tooltip: 'Previous week',
-            onPressed: () => setState(() {
-              _weekStart = _weekStart.subtract(const Duration(days: 7));
-              _selectedDate = _weekStart;
-            }),
-            icon: const Icon(Icons.chevron_left_rounded),
+          SizedBox(
+            width: 36,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              tooltip: 'Previous week',
+              onPressed: () => setState(() {
+                _weekStart =
+                    _weekStart.subtract(const Duration(days: 7));
+                _selectedDate = _weekStart;
+              }),
+              icon: const Icon(Icons.chevron_left_rounded),
+            ),
           ),
+
           Expanded(
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: dates.map((date) {
                 final selected = _sameDate(_selectedDate, date);
-                return InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => setState(() => _selectedDate = date),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: 42,
-                    padding: const EdgeInsets.symmetric(vertical: 9),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.transparent,
+
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: InkWell(
                       borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          _weekday(date.weekday),
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: selected ? Colors.white70 : null,
-                          ),
+                      onTap: () =>
+                          setState(() => _selectedDate = date),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding:
+                        const EdgeInsets.symmetric(vertical: 9),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? selectedBackground
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          '${date.day}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: selected ? Colors.white : null,
-                          ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _weekday(date.weekday),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: selected
+                                    ? selectedTextColor.withValues(
+                                  alpha: 0.7,
+                                )
+                                    : colors.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              '${date.day}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: selected
+                                    ? selectedTextColor
+                                    : colors.onSurface,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 );
               }).toList(),
             ),
           ),
-          IconButton(
-            tooltip: 'Next week',
-            onPressed: () => setState(() {
-              _weekStart = _weekStart.add(const Duration(days: 7));
-              _selectedDate = _weekStart;
-            }),
-            icon: const Icon(Icons.chevron_right_rounded),
+
+          SizedBox(
+            width: 36,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              tooltip: 'Next week',
+              onPressed: () => setState(() {
+                _weekStart =
+                    _weekStart.add(const Duration(days: 7));
+                _selectedDate = _weekStart;
+              }),
+              icon: const Icon(Icons.chevron_right_rounded),
+            ),
           ),
         ],
       ),
     );
   }
 
-  static DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
+  static DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 
   static DateTime _startOfWeek(DateTime date) =>
       _dateOnly(date).subtract(Duration(days: date.weekday % 7));
@@ -214,7 +253,8 @@ class _HomePageState extends State<HomePage> {
   static String _weekday(int weekday) =>
       const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][weekday - 1];
 
-  static String _formatDate(DateTime date) => '${date.day}/${date.month}/${date.year}';
+  static String _formatDate(DateTime date) =>
+      '${date.day}/${date.month}/${date.year}';
 }
 
 class _MessageState extends StatelessWidget {
@@ -236,9 +276,17 @@ class _MessageState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 54, color: Theme.of(context).colorScheme.primary),
+            Icon(
+              icon,
+              size: 54,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
             const SizedBox(height: 14),
-            Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            Text(title,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 6),
             Text(body, textAlign: TextAlign.center),
           ],

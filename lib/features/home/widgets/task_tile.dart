@@ -22,14 +22,19 @@ class TaskTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: colors.surface,
       borderRadius: BorderRadius.circular(14),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 24)),
+            Text(
+              emoji,
+              style: const TextStyle(fontSize: 24),
+            ),
             const SizedBox(width: 13),
             Expanded(
               child: InkWell(
@@ -43,12 +48,20 @@ class TaskTile extends StatelessWidget {
                       Text(
                         title,
                         style: TextStyle(
+                          color: colors.onSurface,
                           fontWeight: FontWeight.w700,
                           decoration: done ? TextDecoration.lineThrough : null,
+                          decorationColor: colors.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: colors.onSurface.withValues(alpha: 0.7),
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -58,18 +71,27 @@ class TaskTile extends StatelessWidget {
               onPressed: onToggle,
               icon: Icon(
                 done ? Icons.check_circle_rounded : Icons.circle_outlined,
-                color: done ? Theme.of(context).colorScheme.primary : Colors.grey,
+                color: done
+                    ? colors.onSurface
+                    : colors.onSurface.withValues(alpha: 0.55),
               ),
             ),
             PopupMenuButton<String>(
               tooltip: 'More',
+              iconColor: colors.onSurface,
               onSelected: (value) {
                 if (value == 'edit') onEdit();
                 if (value == 'delete') onDelete();
               },
               itemBuilder: (_) => const [
-                PopupMenuItem(value: 'edit', child: Text('Edit')),
-                PopupMenuItem(value: 'delete', child: Text('Delete')),
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Text('Edit'),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Delete'),
+                ),
               ],
             ),
           ],
